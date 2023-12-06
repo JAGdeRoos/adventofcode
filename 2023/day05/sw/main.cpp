@@ -1,10 +1,21 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QStringList>
-#include <limits>
+#include <QTime>
+#include <QDateTime>
+
+struct Map
+{
+    long long llSourceStart;
+    long long llDestinationStart;
+    long long llRangeSize;
+};
 
 int main(int argc, char *argv[])
 {
+    long long startTime = QDateTime::currentMSecsSinceEpoch();
+    long long endTime;
+
     QCoreApplication a(argc, argv);
 
     QFile* file = new QFile("../input.txt");
@@ -12,140 +23,102 @@ int main(int argc, char *argv[])
     if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
         return 0;
 
+    int iIndex = 0;
     QString line = "";
+    QStringList seeds;
     QStringList numbers;
 
-    int iIndex = 0;
-    QVector<long long> seeds;
-    QMap<long long, long long> empty;
-    QVector<QMap<long long, long long>> XtoY;
+    QVector<Map> empty;
+    QVector<QVector<Map>> XtoY;
 
-    long long seedNr=-1;
-    long long locationNr=-1;
-
-    while(!file->atEnd())   // populate seeds and maps
+    while(!file->atEnd()) // populate seeds and maps
     {
         line = file->readLine();
-
         line = line.remove("\n");
         if (!line.isEmpty())
         {
             if(line.contains("seeds: "))
             {
                 line = line.remove(0,line.indexOf(":")+1);
-
-                for(const QString &seed:line.split(" ", Qt::SkipEmptyParts))
-                    seeds.append(seed.toLongLong());
-
-//                numbers = line.split(" ", Qt::SkipEmptyParts);
-//                for(int i=0; i < numbers.size()-1; i+=2)
-//                {
-//                    seeds.append(numbers.at(i).toLongLong());
-//                    for(long long j=1; j < numbers.at(i+1).toLongLong(); j++)
-//                        seeds.append(numbers.at(i).toLongLong()+j);
-//                }
+                seeds = line.split(" ", Qt::SkipEmptyParts);
             }
             else
             {
                 if(line.at(0).isDigit())
                 {
                     numbers = line.split(" ", Qt::SkipEmptyParts);
-
-                    if(!XtoY[iIndex-1].contains(numbers[1].toLongLong()-1))
-                        XtoY[iIndex-1].insert(numbers[1].toLongLong()-1, -1);
-                    XtoY[iIndex-1].insert(numbers[1].toLongLong(), numbers[0].toLongLong());
-                    XtoY[iIndex-1].insert(numbers[1].toLongLong()+numbers[2].toLongLong()-1, numbers[0].toLongLong()+numbers[2].toLongLong()-1);
-                    if(!XtoY[iIndex-1].contains(numbers[1].toLongLong()+numbers[2].toLongLong()))
-                        XtoY[iIndex-1].insert(numbers[1].toLongLong()+numbers[2].toLongLong(), -1);
+                    XtoY[iIndex-1].push_back({ numbers[1].toLongLong(), numbers[0].toLongLong(), numbers[2].toLongLong() });
                 }
             }
         }
         else
         {
             iIndex++;
-            XtoY.append(empty);
-            XtoY.last().insert(0,-1);
-            XtoY.last().insert(std::numeric_limits<long long int>::max(), -1);
+            XtoY.push_back(empty);
         }
     }
-    for(long long seed : seeds)
+
+    long long llLowestLocation = 0;
+    long long llLowestSeed = 0;
+    long long llIndex = 0;
+
+    long long llSeedNumber  =  0;
+    long long llInVal       = -1;
+    long long llOutVal      = -1;
+
+    int i = 0;
+    long long j;
+
+    for (i = 0; i < seeds.size(); i += 2) // assign correct (part 2) seed things
     {
-        long long inVal = seed;
-        long long outVal = -1;
-        for(QMap map : XtoY)
+        for (j = seeds[i].toLongLong(); j <= (seeds[i].toLongLong() + seeds[i + 1].toLongLong()); j++) // for each seed...
         {
-            outVal = -1;
-            long long prevKey = -1;
-            for (auto i = map.cbegin(), end = map.cend(); i != end; ++i)
+            llIndex++;
+
+            llSeedNumber= j;
+
+            llInVal     = llSeedNumber;
+            llOutVal    = -1;
+
+            for (const auto &conversion : XtoY)
             {
-                if(prevKey < 0 && inVal <= i.key())
+                for (Map map : conversion)
                 {
-                    if(i.value() == -1)
-                        outVal = inVal;
-                    else
-                        outVal = inVal + (i.value() - i.key());
-                    break;
+                    if (llInVal >= map.llSourceStart && llInVal <= (map.llSourceStart + map.llRangeSize -1))
+                    {
+                        llOutVal = map.llDestinationStart + (llInVal - map.llSourceStart);
+                        break;
+                    }
+                    if (llOutVal == -1)
+                        llOutVal = llInVal;
                 }
-                else if (inVal > prevKey && inVal <= i.key())
-                {
-                    if(i.value() == -1)
-                        outVal = inVal;
-                    else
-                        outVal = inVal + (i.value() - i.key());
-                    break;
-                }
-                prevKey = i.key();
+                llInVal = llOutVal;
+                llOutVal = -1;
             }
-            inVal = outVal;
-        }
-        if(locationNr < 0)
-        {
-            locationNr = outVal;
-            seedNr = seed;
-        }
-        else if (outVal < locationNr)
-        {
-            locationNr = outVal;
-            seedNr = seed;
+
+            llOutVal = llInVal; // only when done with the nested for
+
+            if (llOutVal == 0)
+                llLowestLocation = llOutVal;
+            if (llLowestLocation == 0)
+                llLowestLocation = llOutVal;
+            else if (llOutVal < llLowestLocation)
+            {
+                llLowestLocation = llOutVal;
+                llLowestSeed = llSeedNumber;
+                qDebug() << " New Lowest Seed:" << llLowestSeed << "Location: " << llLowestLocation;
+            }
+            if (llIndex % 100000000 == 0)
+                qDebug() << "llIndex: " << llIndex;
         }
     }
 
-    QMap<long long, long long>  map;
-    QVector<long long> endPoints;
-    bool bFirst = true;
+    endTime = QDateTime::currentMSecsSinceEpoch();
+    qint64 elapsedMilliseconds = endTime - startTime;
+    QTime elapsed(0, 0);
+    elapsed = elapsed.addMSecs(elapsedMilliseconds);
 
-    long long prevKey = -1;
-    for(int i=XtoY.size()-1; i >= 0; i--)
-    {
-        prevKey = -1;
-        map = XtoY[i];
-        for (auto j = map.cbegin(), end = map.cend(); j != end; ++j)
-        {
-            if(bFirst)
-            {
-                prevKey =  j.key();
-                endPoints.append(prevKey);
-            }
-            else
-            {
-                if(j.key() == -1)
-                    ;//skip
-                else if (j.key() == 0)
-                {
-                    prevKey = j.key();
-                }
-                else
-                {
-
-                }
-            }
-        }
-        bFirst = false;
-    }
-    qDebug() << endPoints;
-    qDebug() << seedNr << locationNr << seeds;//<< XtoY;
-
-
-    file->close();
-    return a.exec();
+    qDebug() << "Time elapsed since starting the function: " << elapsed.toString("mm:ss:zzz");
+    qDebug() << "llLowestLocation: " << llLowestLocation << " - " "llLowestSeed: "<< llLowestSeed;
+    qDebug() << "Number of seeds checked: " << llIndex;
 }
