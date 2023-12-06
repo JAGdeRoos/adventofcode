@@ -57,12 +57,13 @@ int main(int argc, char *argv[])
             XtoY.push_back(empty);
         }
     }
+    file->close();
+    delete file;
 
     long long llLowestLocation = 0;
     long long llLowestSeed = 0;
     long long llIndex = 0;
 
-    long long llSeedNumber  =  0;
     long long llInVal       = -1;
     long long llOutVal      = -1;
 
@@ -75,9 +76,7 @@ int main(int argc, char *argv[])
         {
             llIndex++;
 
-            llSeedNumber= j;
-
-            llInVal     = llSeedNumber;
+            llInVal     = j;
             llOutVal    = -1;
 
             for (const auto &conversion : XtoY)
@@ -105,7 +104,7 @@ int main(int argc, char *argv[])
             else if (llOutVal < llLowestLocation)
             {
                 llLowestLocation = llOutVal;
-                llLowestSeed = llSeedNumber;
+                llLowestSeed = j;
                 qDebug() << " New Lowest Seed:" << llLowestSeed << "Location: " << llLowestLocation;
             }
             if (llIndex % 100000000 == 0)
