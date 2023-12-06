@@ -6,21 +6,21 @@
 
 struct Map
 {
-    long long llSourceStart;
-    long long llDestinationStart;
-    long long llRangeSize;
+    int64_t llSourceStart;
+    int64_t llDestinationStart;
+    int64_t llRangeSize;
 };
 
 int main(int argc, char *argv[])
 {
-    long long startTime = QDateTime::currentMSecsSinceEpoch();
-    long long endTime;
+    int64_t startTime = QDateTime::currentMSecsSinceEpoch();
+    int64_t endTime;
 
     QCoreApplication a(argc, argv);
 
-    QFile* file = new QFile("../input.txt");
+    QFile file("../input.txt");
 
-    if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return 0;
 
     int iIndex = 0;
@@ -31,9 +31,9 @@ int main(int argc, char *argv[])
     QVector<Map> empty;
     QVector<QVector<Map>> XtoY;
 
-    while(!file->atEnd()) // populate seeds and maps
+    while(!file.atEnd()) // populate seeds and maps
     {
-        line = file->readLine();
+        line = file.readLine();
         line = line.remove("\n");
         if (!line.isEmpty())
         {
@@ -42,13 +42,10 @@ int main(int argc, char *argv[])
                 line = line.remove(0,line.indexOf(":")+1);
                 seeds = line.split(" ", Qt::SkipEmptyParts);
             }
-            else
+            else if(line.at(0).isDigit())
             {
-                if(line.at(0).isDigit())
-                {
-                    numbers = line.split(" ", Qt::SkipEmptyParts);
-                    XtoY[iIndex-1].push_back({ numbers[1].toLongLong(), numbers[0].toLongLong(), numbers[2].toLongLong() });
-                }
+                numbers = line.split(" ", Qt::SkipEmptyParts);
+                XtoY[iIndex-1].push_back({ numbers[1].toLongLong(), numbers[0].toLongLong(), numbers[2].toLongLong() });
             }
         }
         else
@@ -57,53 +54,44 @@ int main(int argc, char *argv[])
             XtoY.push_back(empty);
         }
     }
-    file->close();
-    delete file;
 
-    long long llLowestLocation = 0;
-    long long llLowestSeed = 0;
-    long long llIndex = 0;
+    int64_t llLowestLocation = 0;
+    int64_t llLowestSeed = 0;
+    int64_t llIndex = 0;
 
-    long long llInVal       = -1;
-    long long llOutVal      = -1;
+    int64_t llInVal       = -1;
+    int64_t llOutVal      = -1;
 
     int i = 0;
-    long long j;
+    int64_t j;
 
-    for (i = 0; i < seeds.size(); i += 2) // assign correct (part 2) seed things
+    for (i = 0; i < seeds.size(); i += 2)
     {
-        for (j = seeds[i].toLongLong(); j <= (seeds[i].toLongLong() + seeds[i + 1].toLongLong()); j++) // for each seed...
+        for (j = seeds[i].toLongLong(); j <= (seeds[i].toLongLong() + seeds[i + 1].toLongLong()); ++j)
         {
-            llIndex++;
+            ++llIndex;
 
             llInVal     = j;
             llOutVal    = -1;
 
-            for (const auto &conversion : XtoY)
+            for (const auto &vector : XtoY)
             {
-                for (Map map : conversion)
+                for (const auto &map : vector)
                 {
                     if (llInVal >= map.llSourceStart && llInVal <= (map.llSourceStart + map.llRangeSize -1))
                     {
                         llOutVal = map.llDestinationStart + (llInVal - map.llSourceStart);
                         break;
                     }
-                    if (llOutVal == -1)
-                        llOutVal = llInVal;
                 }
-                llInVal = llOutVal;
+                if (llOutVal != -1)
+                    llInVal = llOutVal;
                 llOutVal = -1;
             }
 
-            llOutVal = llInVal; // only when done with the nested for
-
-            if (llOutVal == 0)
-                llLowestLocation = llOutVal;
-            if (llLowestLocation == 0)
-                llLowestLocation = llOutVal;
-            else if (llOutVal < llLowestLocation)
+            if (llInVal < llLowestLocation || llLowestLocation == 0)
             {
-                llLowestLocation = llOutVal;
+                llLowestLocation = llInVal;
                 llLowestSeed = j;
                 qDebug() << " New Lowest Seed:" << llLowestSeed << "Location: " << llLowestLocation;
             }
