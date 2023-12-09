@@ -28,8 +28,16 @@ QMap<QChar, int> map;
 bool hand_sorter(Hand const& lhs, Hand const& rhs);
 int getType(QString hand);
 
-int main(int argc, char *argv[])
+int main(void)
 {
+    QFile file("../input.txt");
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file";
+        return 1;
+    }
+
     map.insert('2', 2);
     map.insert('3', 3);
     map.insert('4', 4);
@@ -43,13 +51,6 @@ int main(int argc, char *argv[])
     map.insert('Q', 12);
     map.insert('K', 13);
     map.insert('A', 14);
-
-    QCoreApplication a(argc, argv);
-
-    QFile file("../input.txt");
-
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
 
     QString line = "";
     QStringList lineParts;

@@ -8,14 +8,15 @@ struct strNumber{
     QVector<int> index;
 };
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    QCoreApplication a(argc, argv);
+    QFile file("../input.txt");
 
-    QFile* file = new QFile("../input.txt");
-
-    if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file";
+        return 1;
+    }
 
     QString line = "";
     QString winningNumbersString;
@@ -38,9 +39,9 @@ int main(int argc, char *argv[])
     qDebug() << copies;
     copies.append(0);
 
-    while(!file->atEnd())
+    while(!file.atEnd())
     {
-        line = file->readLine();
+        line = file.readLine();
 
         line.remove("Card ");
         iIndex = line.lastIndexOf(":");
@@ -80,5 +81,5 @@ int main(int argc, char *argv[])
         iSecondTotalPoints += copies[iID-1];
         qDebug() << iID << iFirstTotalPoints << iSecondTotalPoints << copies[iID-1] << iNumberOfMatches;
     }
-    return a.exec();
+    return 0;
 }

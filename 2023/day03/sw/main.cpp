@@ -8,18 +8,20 @@ struct strNumber{
     QVector<int> index;
 };
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication a(argc, argv);
 
-    QFile* file = new QFile("../input.txt");
+int main(void)
+{
+    QFile file("../input.txt");
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file";
+        return 1;
+    }
 
     QString prevLine;
     QString currLine;
     QString nextLine;
-
-    if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
 
     int iFirstTotal = 0;
     int iSecondTotal = 0;
@@ -34,16 +36,16 @@ int main(int argc, char *argv[])
 
     QString numberString = "";
 
-    nextLine = file->readLine();
+    nextLine = file.readLine();
 
     int iLineNr = 0;
     while (!bStop)
     {
         prevLine = currLine;
         currLine = nextLine;
-        if(!file->atEnd())
+        if(!file.atEnd())
         {
-            nextLine = file->readLine();
+            nextLine = file.readLine();
         }
         else
         {
@@ -122,28 +124,30 @@ int main(int argc, char *argv[])
         }
         iLineNr++;
     }
-    //qDebug() << numbers.size();
-    QFile* file2 = new QFile("../input.txt");
 
+    QFile file2("../input.txt");
+
+    if (!file2.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file2";
+        return 1;
+    }
     prevLine = "";
     currLine = "";
     nextLine = "";
 
-    if (!file2->open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
-
     iLineNr = 0;
     bStop = false;
 
-    nextLine = file2->readLine();
+    nextLine = file2.readLine();
     QVector<int> values;
     while(!bStop)
     {
         prevLine = currLine;
         currLine = nextLine;
-        if(!file2->atEnd())
+        if(!file2.atEnd())
         {
-            nextLine = file2->readLine();
+            nextLine = file2.readLine();
         }
         else
         {
@@ -184,5 +188,5 @@ int main(int argc, char *argv[])
         qDebug() << iFirstTotal << iSecondTotal <<  currLine;
         iLineNr++;
     }
-    return a.exec();
+    return 0;
 }

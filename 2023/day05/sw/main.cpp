@@ -11,17 +11,18 @@ struct Map
     int64_t llRangeSize;
 };
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    int64_t startTime = QDateTime::currentMSecsSinceEpoch();
-    int64_t endTime;
-
-    QCoreApplication a(argc, argv);
-
     QFile file("../input.txt");
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
+    {
+        qDebug() << "Failed to open file";
+        return 1;
+    }
+
+    int64_t startTime = QDateTime::currentMSecsSinceEpoch();
+    int64_t endTime;
 
     int iIndex = 0;
     QString line = "";
@@ -108,4 +109,6 @@ int main(int argc, char *argv[])
     qDebug() << "Time elapsed since starting the function: " << elapsed.toString("mm:ss:zzz");
     qDebug() << "llLowestLocation: " << llLowestLocation << " - " "llLowestSeed: "<< llLowestSeed;
     qDebug() << "Number of seeds checked: " << llIndex;
+
+    return 0;
 }

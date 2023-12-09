@@ -4,14 +4,15 @@
 #include <QTime>
 #include <QDateTime>
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    QCoreApplication a(argc, argv);
-
     QFile file("../input.txt");
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
+    {
+        qDebug() << "Failed to open file";
+        return 1;
+    }
 
     QString line = "";
     QStringList lineList;
@@ -100,7 +101,6 @@ int main(int argc, char *argv[])
     for(auto totals:totalsPartTwo)
         total += totals;
     qDebug() << "\n" << totalPartOne << total;
-    qDebug() << "\ndone\n";
 
     return 0;
 }

@@ -22,14 +22,15 @@ struct strInput
 
 long long findDenominator(long long n1, long long n2);
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    QCoreApplication a(argc, argv);
-
     QFile file("../input.txt");
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
+    {
+        qDebug() << "Failed to open file";
+        return 1;
+    }
 
     QString line = "";
     QStringList lineParts;
@@ -59,8 +60,6 @@ int main(int argc, char *argv[])
     }
     bool atEnd = false;
 
-    QString in = "11A";
-    QString out;
     QVector<strInput> inputs;
 
     for(int i=0; i<nodes.size(); ++i)
@@ -75,7 +74,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    for(auto input : inputs)
+    for(const auto &input : inputs)
     {
         qDebug() << input.Input;
     }
@@ -131,6 +130,7 @@ int main(int argc, char *argv[])
         total = findDenominator(total, iters.at(i));
     }
     qDebug() << total;
+    return 0;
 }
 
 long long findDenominator(long long n1, long long n2)

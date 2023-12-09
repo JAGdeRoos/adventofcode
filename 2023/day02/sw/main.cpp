@@ -12,14 +12,15 @@ enum eColors {
     blue
 };
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    QCoreApplication a(argc, argv);
+    QFile file("../input.txt");
 
-    QFile* file = new QFile("../input.txt");
-
-    if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file";
+        return 1;
+    }
 
     QStringList colors = {"red", "green", "blue"};
 
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
     int32_t iBlue;
     bool bPossible;
 
-    while (!file->atEnd())
+    while (!file.atEnd())
     {
         bPossible = true;
 
@@ -46,7 +47,7 @@ int main(int argc, char *argv[])
         iGreen = 0;
         iBlue = 0;
 
-        line = file->readLine();
+        line = file.readLine();
 
         line.remove("Game ");
         iIndex = line.lastIndexOf(":");
@@ -88,5 +89,5 @@ int main(int argc, char *argv[])
         iSecondTotal += (iRed * iGreen * iBlue);
         qDebug() << iID << iFirstTotal << iSecondTotal << iRed << iGreen << iBlue << bPossible << line;
     }
-    return a.exec();
+    return 0;
 }

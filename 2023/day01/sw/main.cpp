@@ -2,14 +2,15 @@
 #include <QFile>
 #include <QStringList>
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    QCoreApplication a(argc, argv);
+    QFile file("../input.txt");
 
-    QFile* file = new QFile("../input.txt");
-
-    if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file";
+        return 1;
+    }
 
     int iFirst = 0;
     int iSecond= 0;
@@ -22,9 +23,9 @@ int main(int argc, char *argv[])
 
     QString line;
 
-    while (!file->atEnd())
+    while (!file.atEnd())
     {
-        line = file->readLine();
+        line = file.readLine();
 
         iFirstNumberIndex = line.size();
         iSecondNumberIndex = -1;
@@ -64,5 +65,7 @@ int main(int argc, char *argv[])
         iTotal += iNumber;
         qDebug() << iNumber << iTotal << line;
     }
-    return a.exec();
+
+    qDebug() << "end \n";
+    return 0;
 }
