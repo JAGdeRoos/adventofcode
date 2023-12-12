@@ -3,18 +3,19 @@
 #include <QStringList>
 #include <QTime>
 #include <QElapsedTimer>
-/*
-The pipes are arranged in a two-dimensional grid of tiles:
+#include <QPoint>
 
-*  | is a vertical pipe connecting north and south.
-*  - is a horizontal pipe connecting east and west.
-*  L is a 90-degree bend connecting north and east.
-*  J is a 90-degree bend connecting north and west.
-*  7 is a 90-degree bend connecting south and west.
-*  F is a 90-degree bend connecting south and east.
-*  . is ground; there is no pipe in this tile.
-*  S is the starting position of the animal; there is a pipe on this tile, but your sketch doesn't show what shape the pipe has.
-*/
+//The pipes are arranged in a two-dimensional grid of tiles:
+// enum pipeType{
+//     NS = '|', //is a vertical pipe connecting north and south.
+//     EW = '-', //is a horizontal pipe connecting east and west.
+//     NE = 'L', //is a 90-degree bend connecting north and east.
+//     NW = 'J', //is a 90-degree bend connecting north and west.
+//     SW = '7', //is a 90-degree bend connecting south and west.
+//     SE = 'F', //is a 90-degree bend connecting south and east.
+//     GN = '.', //is ground; there is no pipe in this tile.
+//     ST = 'S' //is the starting position of the animal; there is a pipe on this tile, but your sketch doesn't show what shape the pipe has.
+// };
 
 int main(void)
 {
@@ -45,145 +46,162 @@ int main(void)
 
     long long total1=0;
     long long total2=0;
-    QString prevChar = "";
-    QVector<int> prevIndex;
 
-    for(int y = 0; y < pipes.size(); y++)
-    {
-        for(int x = 0; x < pipes.at(0).size(); x++)
-        {
-            if(pipes.at(y).at(x) == "S")
-            {
+
+    QVector<QVector<QPair<int, QString>>> path;
+    QPair<QPoint, QString> start;
+    QString prevChar = "";
+    QPoint prevPoint;
+    QPoint currPoint;
+
+    for(int y = 0; y < pipes.size(); y++){
+        for(int x = 0; x < pipes.at(0).size(); x++){
+            if(pipes.at(y).at(x) == "S"){
+                start.first = {x,y};
                 if(y>0)
-                    if(pipes.at(y-1).at(x) == "|" || pipes.at(y-1).at(x) == "F" || pipes.at(y-1).at(x) == "7")
-                    {
+                    if(pipes.at(y-1).at(x) == "|" || pipes.at(y-1).at(x) == "F" || pipes.at(y-1).at(x) == "7"){
                         prevChar = pipes.at(y-1).at(x);
-                        prevIndex << y << x << y-1 << x;
-                        break;
+                        prevPoint = QPoint(x,y);
+                        currPoint = QPoint(x,y-1);
+                        start.second.append("N");
                     }
                 if(y<pipes.size())
-                    if(pipes.at(y+1).at(x) == "|" || pipes.at(y+1).at(x) == "L" || pipes.at(y+1).at(x) == "J")
-                    {
+                    if(pipes.at(y+1).at(x) == "|" || pipes.at(y+1).at(x) == "L" || pipes.at(y+1).at(x) == "J"){
                         prevChar = pipes.at(y+1).at(x);
-                        prevIndex << y << x << y+1 << x;
-                        break;
+                        prevPoint = QPoint(x,y);
+                        currPoint = QPoint(x,y+1);
+                        start.second.append("S");
                     }
                 if(x>0)
-                    if(pipes.at(y).at(x-1) == "-" || pipes.at(y).at(x-1) == "F" || pipes.at(y).at(x-1) == "L")
-                    {
+                    if(pipes.at(y).at(x-1) == "-" || pipes.at(y).at(x-1) == "F" || pipes.at(y).at(x-1) == "L"){
                         prevChar = pipes.at(y).at(x-1);
-                        prevIndex << y << x << y << x-1;
-                        break;
+                        prevPoint = QPoint(x,y);
+                        currPoint = QPoint(x-1,y);
+                        start.second.append("W");
                     }
                 if(x<pipes.at(y).size())
-                    if(pipes.at(y).at(x+1) == "-" || pipes.at(y).at(x+1) == "7" || pipes.at(y).at(x+1) == "J")
-                    {
+                    if(pipes.at(y).at(x+1) == "-" || pipes.at(y).at(x+1) == "7" || pipes.at(y).at(x+1) == "J"){
                         prevChar = pipes.at(y).at(x+1);
-                        prevIndex << y << x << y << x+1;
-                        break;
+                        prevPoint = QPoint(x,y);
+                        currPoint = QPoint(x+1,y);
+                        start.second.append("E");
                     }
                 break;
             }
         }
     }
 
+    if(start.second == "NS") start.second = '|';
+    if(start.second == "EW") start.second = '-';
+    if(start.second == "NE") start.second = 'L';
+    if(start.second == "NW") start.second = 'J';
+    if(start.second == "SW") start.second = '7';
+    if(start.second == "SE") start.second = 'F';
+
+    qDebug() << start;
     bool bEndFound = false;
     total1 = 1;
 
-    int prevY = prevIndex.at(0);
-    int prevX = prevIndex.at(1);
-    int currY = prevIndex.at(2);
-    int currX = prevIndex.at(3);
+    path.resize(pipes.size());
 
-    QString currChar;
     while(!bEndFound)
     {
-        if(prevChar == "|")
-        {
-            qDebug() << prevChar << prevX << currX << prevY << currY;
-            if(currY - prevY > 0){ // //from above
-                prevY = currY;
-                currY++;
+        if(prevChar == "|"){
+            path[currPoint.y()].push_back({currPoint.x(), prevChar});
+            if(currPoint.y() - prevPoint.y() > 0){ // //from above
+                prevPoint = currPoint;
+                currPoint.setY(currPoint.y()+1);
             }
             else{
-                prevY = currY;
-                currY--;
+                prevPoint = currPoint;
+                currPoint.setY(currPoint.y()-1);
             }
         }
-        else if(prevChar == "-")
-        {
-            qDebug() << prevChar << prevX << currX << prevY << currY;
-            if(currX - prevX > 0){ // from left
-                prevX = currX;
-                currX++;
+        else if(prevChar == "-"){
+            if(currPoint.x() - prevPoint.x() > 0){ // from left
+                prevPoint = currPoint;
+                currPoint.setX(currPoint.x()+1);
             }
             else{
-                prevX = currX;
-                currX--;
+                prevPoint = currPoint;
+                currPoint.setX(currPoint.x()-1);
             }
         }
-        else if(prevChar == "L")
-        {
-            qDebug() << prevChar << prevX << currX << prevY << currY;
-            if(currY - prevY > 0){ // from above
-                prevX = currX;
-                prevY = currY;
-                currX++;
+        else if(prevChar == "L"){
+            path[currPoint.y()].push_back({currPoint.x(), prevChar});
+            if(currPoint.y() - prevPoint.y() > 0){ // from above
+                prevPoint = currPoint;
+                currPoint.setX(currPoint.x()+1);
             }
             else{
-                prevY = currY;
-                currY--;
+                prevPoint = currPoint;
+                currPoint.setY(currPoint.y()-1);
             }
         }
-        else if(prevChar == "J")
-        {
-            qDebug() << prevChar << prevX << currX << prevY << currY;
-            if(currY - prevY > 0){ // from above
-                prevX = currX;
-                prevY = currY;
-                currX--;
+        else if(prevChar == "J"){
+            path[currPoint.y()].push_back({currPoint.x(), prevChar});
+            if(currPoint.y() - prevPoint.y() > 0){ // from above
+                prevPoint = currPoint;
+                currPoint.setX(currPoint.x()-1);
             }
             else{
-                prevX = currX;
-                prevY = currY;
-                currY--;
+                prevPoint = currPoint;
+                currPoint.setY(currPoint.y()-1);
             }
         }
-        else if(prevChar == "7")
-        {
-            qDebug() << prevChar << prevX << currX << prevY << currY;
-            if(currY - prevY < 0){ // from below
-                prevX = currX;
-                prevY = currY;
-                currX--;
+        else if(prevChar == "7"){
+            path[currPoint.y()].push_back({currPoint.x(), prevChar});
+            if(currPoint.y() - prevPoint.y() < 0){ // from below
+                prevPoint = currPoint;
+                currPoint.setX(currPoint.x()-1);
             }
             else{
-                prevX = currX;
-                prevY = currY;
-                currY++;
+                prevPoint = currPoint;
+                currPoint.setY(currPoint.y()+1);
             }
         }
-        else if(prevChar == "F")
-        {
-            qDebug() << prevChar << prevX << currX << prevY << currY;
-            if(currY - prevY < 0){ // from below
-                prevX = currX;
-                prevY = currY;
-                currX++;
+        else if(prevChar == "F"){
+            path[currPoint.y()].push_back({currPoint.x(), prevChar});
+            if(currPoint.y() - prevPoint.y() < 0){ // from below
+                prevPoint = currPoint;
+                currPoint.setX(currPoint.x()+1);
             }
             else{
-                prevX = currX;
-                prevY = currY;
-                currY++;
+                prevPoint = currPoint;
+                currPoint.setY(currPoint.y()+1);
             }
         }
-        prevChar = pipes.at(currY).at(currX);
+        prevChar = pipes.at(currPoint.y()).at(currPoint.x());
 
         total1++;
-        if(prevChar == "S")
-        {
+        if(prevChar == "S"){
             bEndFound=true;
-            qDebug() << "in the if statement" << total1/2;
+        }
+    }
+
+    path[start.first.y()].push_back({start.first.x(), start.second});
+
+    // Part 2: Calculate number of tiles inside the path.
+    for (auto row : path)
+    {
+        std::sort(row.begin(), row.end());
+        bool bInside = false;
+        for (auto i = row.begin(); i < row.end(); i++)
+        {
+            // If this interval is inside the path, increment the P2 answer accordingly.
+            if (bInside)
+                total2 += i->first - (i - 1)->first - 1; // delta x - 1
+            // Vertical pipes simply toggle whether we are inside.
+            if (i->second == "|") {
+                bInside = !bInside;
+                continue;
+            }
+            QString corner1 = i->second;
+            i++;
+            QString corner2 = i->second;
+            if((corner1 == "L" && corner2 == "7") || (corner1 == "7" && corner2 == "L") ||
+               (corner1 == "F" && corner2 == "J") || (corner1 == "J" && corner2 == "F"))
+                bInside = !bInside;
         }
     }
 
@@ -195,3 +213,5 @@ int main(void)
 
     return 0;
 }
+
+
