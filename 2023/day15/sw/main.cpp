@@ -3,7 +3,6 @@
 #include <QStringList>
 #include <QTime>
 #include <QElapsedTimer>
-#include <QPair>
 
 int main(void)
 {
@@ -20,7 +19,7 @@ int main(void)
     QString line = "";
     QStringList lineList;
 
-    QVector<QPair<QString, QVector<int>>> lineData;
+    QVector<QVector<long long>> numbers;
 
     // read file
     while(!file.atEnd())
@@ -31,15 +30,11 @@ int main(void)
         {
             lineList = line.split(" ", Qt::SkipEmptyParts);
         }
-        QVector<int> lineNumbers;
-        QStringList numbers = lineList.at(1).split(",", Qt::SkipEmptyParts);
-        for(auto number : numbers)
-            lineNumbers.append(number.toInt());
-        lineData.append({(QString)lineList.at(0),lineNumbers});
+        QVector<long long> lineNumbers;
+        for(const auto &element : lineList)
+            lineNumbers.append(element.toLongLong());
+        numbers.append(lineNumbers);
     }
-
-    qDebug() << lineData;
-
 
     long long total1=0;
     long long total2=0;
